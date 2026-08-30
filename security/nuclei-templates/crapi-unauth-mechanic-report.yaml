@@ -1,0 +1,32 @@
+id: crapi-openapi-exposed
+
+info:
+  name: crAPI OpenAPI / API docs exposure
+  author: you
+  severity: medium
+  description: >
+    Detects exposed API documentation on the crAPI target. Exposed OpenAPI
+    specs hand an attacker the full endpoint map. This is a starter template —
+    duplicate it and write your own for the BOLA/IDOR, JWT, and mass-assignment
+    bugs you find by hand, so the pipeline regression-tests each one you learn.
+  tags: exposure,crapi,api
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/openapi.json"
+      - "{{BaseURL}}/swagger.json"
+      - "{{BaseURL}}/api-docs"
+      - "{{BaseURL}}/identity/api-docs"
+    stop-at-first-match: true
+    matchers-condition: and
+    matchers:
+      - type: status
+        status:
+          - 200
+      - type: word
+        words:
+          - "openapi"
+          - "swagger"
+        condition: or
+        part: body

@@ -1,0 +1,56 @@
+name: deploy-and-dast
+
+# Runs on a SELF-HOSTED runner on your Kali box, because a cloud runner
+# cannot reach crAPI on your localhost. This is the CD + DAST half:
+# deploy the target, scan it while it runs, keep it up so you can attack by hand.
+on:
+  workflow_dispatch:
+    inputs:
+      teardown:
+        description: 'Tear crAPI down after the scan (frees RAM). Leave false to attack it manually.'
+        type: boolean
+        default: false
+
+jobs:
+  deploy-and-dast:
+    runs-on: [self-hosted, kali]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy crAPI
+        run: |
+          docker compose -f target/docker-compose.yml pull
+          docker compose -f target/docker-compose.yml up -d
+
+      - name: Wait for crAPI to be healthy (:8888)
+        run: |
+          for i in $(seq 1 60); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8888/ || true)
+            if [ "$code" = "200" ] || [ "$code" = "302" ]; then
+              echo "crAPI is up (HTTP $code)"; exit 0
+            fi
+            echo "waiting... ($i) got '$code'"; sleep 5
+          done
+          echo "crAPI did not come up in time"; docker compose -f target/docker-compose.yml ps; exit 1
+
+      - name: DAST — nuclei
+        run: |
+          mkdir -p reports
+          # Custom crAPI-focused templates + nuclei's built-in exposure/misconfig checks.
+          nuclei -u http://127.0.0.1:8888 \
+                 -t security/nuclei-templates/ \
+                 -tags exposure,misconfig,default-login \
+                 -severity low,medium,high,critical \
+                 -o reports/nuclei-report.txt -stats || true
+          echo "----- findings -----"; cat reports/nuclei-report.txt || echo "(none)"
+
+      - name: Upload DAST report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuclei-report
+          path: reports/
+
+      - name: Teardown (optional)
+        if: ${{ inputs.teardown }}
+        run: docker compose -f target/docker-compose.yml down
