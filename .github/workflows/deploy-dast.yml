@@ -1,4 +1,5 @@
 name: deploy-and-dast
+# Manually triggered DAST pipeline (Actions tab -> Run workflow).
 
 # Runs on a SELF-HOSTED runner on your Kali box, because a cloud runner
 # cannot reach crAPI on your localhost. This is the CD + DAST half:
