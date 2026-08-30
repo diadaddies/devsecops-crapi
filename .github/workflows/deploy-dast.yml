@@ -19,8 +19,8 @@ jobs:
 
       - name: Deploy crAPI
         run: |
-          docker compose -f target/docker-compose.yml pull
-          docker compose -f target/docker-compose.yml up -d
+          docker compose -f target/docker-compose.yml --profile lean pull
+          docker compose -f target/docker-compose.yml --profile lean up -d
 
       - name: Wait for crAPI to be healthy (:8888)
         run: |

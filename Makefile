@@ -6,8 +6,8 @@ TARGET  = http://127.0.0.1:8888
 help: ## Show this help
 	@grep -E '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-12s\033[0m %s\n",$$1,$$2}'
 
-up: ## Deploy crAPI, low-RAM stack (no chatbot/chromadb)
-	$(COMPOSE) up -d
+up: ## Deploy crAPI, low-RAM stack (chatbot stubbed, no chromadb)
+	$(COMPOSE) --profile lean up -d
 	@echo "crAPI starting (low-RAM) -> $(TARGET)  (mail UI: http://127.0.0.1:8025)"
 
 up-full: ## Deploy crAPI with the AI chatbot + chromadb (heavy)

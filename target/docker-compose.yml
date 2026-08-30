@@ -320,6 +320,24 @@ services:
     # ports:
     #   - "${LISTEN_IP:-127.0.0.1}:8000:8000"
 
+  # Lightweight stand-in so crapi-web's nginx can resolve the "crapi-chatbot"
+  # upstream at startup when the real chatbot is omitted (low-RAM lean stack).
+  # In the "full" profile the real crapi-chatbot serves this name instead.
+  chatbot-stub:
+    image: traefik/whoami:v1.10.2
+    container_name: crapi-chatbot-stub
+    profiles: ["lean"]
+    command: ["--port", "5002"]
+    networks:
+      default:
+        aliases:
+          - crapi-chatbot
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 32M
+
   mailhog:
     user: root
     container_name: mailhog
