@@ -19,12 +19,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Install gitleaks
+        run: |
+          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.24.3_linux_x64.tar.gz \
+            | sudo tar -xz -C /usr/local/bin gitleaks
+          gitleaks version
+      - name: Scan repo for secrets (report-only)
+        run: |
+          # Whole-tree scan (--no-git), report-only (--exit-code 0). crAPI ships
+          # demo creds on purpose, so expect hits — treat them as a teaching finding.
+          gitleaks detect --source . --no-git --redact -v \
+            --exit-code 0 --report-format sarif --report-path gitleaks.sarif
+      - name: Upload gitleaks report
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          fetch-depth: 0            # gitleaks scans full history
-      - name: gitleaks
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: gitleaks-report
+          path: gitleaks.sarif
 
   # ---------------------------------------------------------------------------
   # 2. Config / IaC scan — misconfigurations in the compose file itself
@@ -35,7 +46,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Trivy config scan
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: config
           scan-ref: target/
@@ -57,7 +68,7 @@ jobs:
           - chromadb/chroma:latest
     steps:
       - name: Trivy scan ${{ matrix.image }}
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: image
           image-ref: ${{ matrix.image }}
