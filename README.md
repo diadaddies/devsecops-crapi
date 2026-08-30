@@ -46,10 +46,17 @@ you fix, re-run, and watch the gates react.
 ```bash
 make up            # deploy crAPI locally
 make dast          # run the pipeline's nuclei scan by hand
+make zap           # run the OWASP ZAP baseline scan (spider + passive checks)
 make attack-info   # print target URLs + tool starting points
 # ... attack http://127.0.0.1:8888 with Burp / sqlmap / ffuf ...
 make down          # free RAM when done  (this box is tight — do this!)
 ```
+
+The DAST job runs **two complementary scanners**: nuclei (template-driven,
+fast, exposure/misconfig) and ZAP baseline (spiders the app, then passive
+checks — headers, cookies, info leaks). Both write into `reports/`, uploaded
+as the `dast-reports` artifact. ZAP is Java (~600 MB–1 GB while running), so on
+this box run it on the lean stack and not alongside a manual Burp session.
 
 Or trigger the full pipeline from GitHub: *Actions → deploy-and-dast → Run workflow*.
 
