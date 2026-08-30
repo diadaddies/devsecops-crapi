@@ -31,10 +31,14 @@ wait: ## Block until crAPI answers on :8888
 
 dast: wait ## Run the same nuclei scan the pipeline runs
 	@mkdir -p reports
-	nuclei -u $(TARGET) -t security/nuclei-templates/ \
+	# Two -t sources: our custom crAPI templates + nuclei's full built-in store,
+	# both filtered by tag. (A single -t would disable the built-in store.)
+	nuclei -u $(TARGET) \
+	  -t security/nuclei-templates/ \
+	  -t $${HOME}/.local/nuclei-templates \
 	  -tags exposure,misconfig,default-login \
 	  -severity low,medium,high,critical -o reports/nuclei-report.txt -stats || true
-	@echo "---"; cat reports/nuclei-report.txt || true
+	@echo "---"; cat reports/nuclei-report.txt || echo "(no findings)"
 
 zap: wait ## Run the OWASP ZAP baseline scan (same as the pipeline)
 	@mkdir -p reports

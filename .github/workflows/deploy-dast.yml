@@ -37,8 +37,10 @@ jobs:
         run: |
           mkdir -p reports
           # Custom crAPI-focused templates + nuclei's built-in exposure/misconfig checks.
+          # Two -t sources so the built-in store isn't overridden by the custom dir.
           nuclei -u http://127.0.0.1:8888 \
                  -t security/nuclei-templates/ \
+                 -t "$HOME/.local/nuclei-templates" \
                  -tags exposure,misconfig,default-login \
                  -severity low,medium,high,critical \
                  -o reports/nuclei-report.txt -stats || true
