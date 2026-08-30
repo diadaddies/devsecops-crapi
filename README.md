@@ -64,12 +64,19 @@ Or trigger the full pipeline from GitHub: *Actions → deploy-and-dast → Run w
 4. **Extend**: add your own small microservice under `./services/` and watch the
    SAST (semgrep) gate light up on real source.
 
-## Resource note
+## Resource note (low-RAM by default)
 
-This box has ~4 GB RAM and crAPI is ~10 containers. Run **one** thing at a time
-and `make down` when you're finished. If it's too heavy, comment out
-`crapi-chatbot` / `chromadb` in `target/docker-compose.yml` (the AI features you
-won't attack) to reclaim memory.
+This box has ~4 GB RAM, so the compose ships two profiles:
+
+| Command      | Containers | Notes |
+|--------------|-----------|-------|
+| `make up`    | 8, ~1.8 GB cap | **default.** Full attack surface minus the AI chatbot. |
+| `make up-full` | 10, chromadb is unbounded | adds `crapi-chatbot` + `chromadb`; only if you want to poke the AI features. |
+
+The lean stack drops `crapi-chatbot` and `chromadb` (gated behind the compose
+`full` profile). `crapi-web` doesn't depend on them, so every classic crAPI
+vuln — BOLA/IDOR, JWT, mass assignment — is still reachable. The DAST workflow
+uses the lean stack. Run **one** thing at a time and `make down` when finished.
 
 ## Layout
 

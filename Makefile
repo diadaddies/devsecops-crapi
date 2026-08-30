@@ -1,14 +1,18 @@
 COMPOSE = docker compose -f target/docker-compose.yml
 TARGET  = http://127.0.0.1:8888
 
-.PHONY: help up down status logs wait dast attack-info clean
+.PHONY: help up up-full down status logs wait dast attack-info clean
 
 help: ## Show this help
 	@grep -E '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-12s\033[0m %s\n",$$1,$$2}'
 
-up: ## Deploy crAPI locally
+up: ## Deploy crAPI, low-RAM stack (no chatbot/chromadb)
 	$(COMPOSE) up -d
-	@echo "crAPI starting -> $(TARGET)  (mail UI: http://127.0.0.1:8025)"
+	@echo "crAPI starting (low-RAM) -> $(TARGET)  (mail UI: http://127.0.0.1:8025)"
+
+up-full: ## Deploy crAPI with the AI chatbot + chromadb (heavy)
+	$(COMPOSE) --profile full up -d
+	@echo "crAPI starting (full) -> $(TARGET)"
 
 down: ## Stop crAPI and free RAM
 	$(COMPOSE) down

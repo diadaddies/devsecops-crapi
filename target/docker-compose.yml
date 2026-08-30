@@ -161,6 +161,7 @@ services:
   crapi-chatbot:
     container_name: crapi-chatbot
     image: crapi/crapi-chatbot:${VERSION:-latest}
+    profiles: ["full"]   # AI chatbot — omitted from the default low-RAM stack
     ports:
       - "${LISTEN_IP:-127.0.0.1}:5500:5500" # MCP server
     environment:
@@ -302,6 +303,7 @@ services:
 
   chromadb:
     container_name: chromadb
+    profiles: ["full"]   # vector DB for the chatbot — omitted from default low-RAM stack
     image: 'chromadb/chroma:latest'
     environment:
       IS_PERSISTENT: 'TRUE'
